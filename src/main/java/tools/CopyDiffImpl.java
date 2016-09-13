@@ -101,7 +101,7 @@ public class CopyDiffImpl implements CopyDiff {
 
     private boolean hasVirus(Path verifiedPath) throws IOException {
         byte[] verifiedBytes = Files.readAllBytes(verifiedPath);
-        return KMP.containsSequence(verifiedBytes, virusSequence);
+        return virusSequence.length != 0 && KMP.containsSequence(verifiedBytes, virusSequence);
     }
 
     private void fillPaths(Path path, Path relative, Collection filled) throws IOException {
