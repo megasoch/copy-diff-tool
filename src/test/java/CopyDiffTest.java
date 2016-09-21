@@ -12,8 +12,10 @@ import java.nio.file.attribute.BasicFileAttributes;
 
 public class CopyDiffTest extends Assert {
     private static CopyDiff copyDiff;
+
     private static Path fileWithoutVirus;
     private static Path fileWithVirus;
+
     private static Path source;
     private static Path target;
     private static Path diff;
@@ -29,8 +31,8 @@ public class CopyDiffTest extends Assert {
     }
 
     private static void createFileWithoutVirus() throws IOException {
-        byte[] virus = new byte[]{0, 1, 0, 0, 0, 1, 1, 0, 1};
-        Files.write(fileWithoutVirus, virus);
+        byte[] noVirus = new byte[]{0, 1, 0, 0, 0, 1, 1, 0, 1};
+        Files.write(fileWithoutVirus, noVirus);
     }
 
     private static void cleanDiff() throws IOException {
