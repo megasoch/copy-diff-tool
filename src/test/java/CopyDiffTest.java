@@ -1,3 +1,5 @@
+import filters.AntiVirusFilter;
+import filters.Filter;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -59,7 +61,9 @@ public class CopyDiffTest extends Assert {
         copyDiff.setTarget(target);
         copyDiff.setDiff(diff);
 
-        copyDiff.loadVirusSequence(new byte[]{0, 1, 1, 1});
+        AntiVirusFilter antiVirusFilter = new AntiVirusFilter();
+        antiVirusFilter.loadVirusSequence(new byte[]{0, 1, 1, 1});
+        copyDiff.addFilter(antiVirusFilter);
 
         fileWithVirus = Paths.get("src/main/resources/source/fileWithVirus");
         fileWithoutVirus = Paths.get("src/main/resources/source/fileWithoutVirus");

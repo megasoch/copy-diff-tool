@@ -1,6 +1,7 @@
 package tools;
 
 import exceptions.PathInitializationException;
+import filters.Filter;
 import utils.KMP;
 
 import java.io.FileInputStream;
@@ -8,10 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.*;
 import java.nio.file.attribute.FileTime;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 
 public class CopyDiffImpl implements CopyDiff {
     private Path source;
@@ -19,8 +17,8 @@ public class CopyDiffImpl implements CopyDiff {
     private Path diff;
 
     private Set<Path> sourceFilesPaths = new TreeSet<>();
+    private List<Filter> filters = new ArrayList<>();
 
-    private byte[] virusSequence = new byte[0];
 
     @Override
     public void setSource(Path source) {
@@ -37,10 +35,6 @@ public class CopyDiffImpl implements CopyDiff {
         this.diff = diff;
     }
 
-    public void loadVirusSequence(byte[] virusSequence) {
-        this.virusSequence = virusSequence;
-    }
-
     @Override
     public void doCopyDiff() throws IOException {
         try {
@@ -52,7 +46,7 @@ public class CopyDiffImpl implements CopyDiff {
                 Path sourcePath = Paths.get(source.toString(), path.toString());
                 Path targetPath = Paths.get(target.toString(), path.toString());
                 Path diffPath = Paths.get(diff.toString(), path.toString());
-                if (!doFilter(sourcePath)) {
+                if (doFilter(sourcePath)) {
                     if (Files.notExists(targetPath) || Files.isDirectory(targetPath)) {
                         copyFile(sourcePath, diffPath);
                     } else if (!compareFiles(sourcePath, targetPath)) {
@@ -63,6 +57,16 @@ public class CopyDiffImpl implements CopyDiff {
         } catch (PathInitializationException e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public void addFilter(Filter filter) {
+        this.filters.add(filter);
+    }
+
+    @Override
+    public void addFilters(Collection<Filter> filters) {
+        this.filters.addAll(filters);
     }
 
     private boolean compareFiles(Path sourcePath, Path targetPath) throws IOException {
@@ -95,14 +99,15 @@ public class CopyDiffImpl implements CopyDiff {
         }
     }
 
+    //Returns true if file acceptable
     private boolean doFilter(Path filteredPath) throws IOException {
-        return hasVirus(filteredPath);
+        boolean verified = true;
+        for (Filter f: filters) {
+            verified = f.doFilter(filteredPath) && verified;
+        }
+        return verified;
     }
 
-    private boolean hasVirus(Path verifiedPath) throws IOException {
-        byte[] verifiedBytes = Files.readAllBytes(verifiedPath);
-        return virusSequence.length != 0 && KMP.containsSequence(verifiedBytes, virusSequence);
-    }
 
     private void fillPaths(Path path, Path relative, Collection filled) throws IOException {
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(path)) {
