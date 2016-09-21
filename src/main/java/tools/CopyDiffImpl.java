@@ -2,6 +2,7 @@ package tools;
 
 import exceptions.PathInitializationException;
 import filters.Filter;
+import utils.BinaryComparator;
 import utils.KMP;
 
 import java.io.FileInputStream;
@@ -49,7 +50,7 @@ public class CopyDiffImpl implements CopyDiff {
                 if (doFilter(sourcePath)) {
                     if (Files.notExists(targetPath) || Files.isDirectory(targetPath)) {
                         copyFile(sourcePath, diffPath);
-                    } else if (!compareFiles(sourcePath, targetPath)) {
+                    } else if (!BinaryComparator.compareFiles(sourcePath, targetPath)) {
                         copyFile(sourcePath, diffPath);
                     }
                 }
@@ -67,36 +68,6 @@ public class CopyDiffImpl implements CopyDiff {
     @Override
     public void addFilters(Collection<Filter> filters) {
         this.filters.addAll(filters);
-    }
-
-    private boolean compareFiles(Path sourcePath, Path targetPath) throws IOException {
-        FileTime sourceTime = Files.getLastModifiedTime(sourcePath);
-        FileTime targetTime = Files.getLastModifiedTime(targetPath);
-        if (Files.size(sourcePath) == Files.size(targetPath)) {
-            if (sourceTime.equals(targetTime)) {
-                return true;
-            }
-            return binaryCompare(sourcePath, targetPath);
-        }
-        return false;
-    }
-
-    private boolean binaryCompare(Path sourcePath, Path targetPath) throws IOException {
-        final int BLOCK_SIZE = 128;
-        InputStream sourceStream = new FileInputStream(sourcePath.toFile());
-        InputStream targetStream = new FileInputStream(targetPath.toFile());
-        byte[] sourceBuffer = new byte[BLOCK_SIZE];
-        byte[] targetBuffer = new byte[BLOCK_SIZE];
-        while (true) {
-            int sourceByteCount = sourceStream.read(sourceBuffer, 0, BLOCK_SIZE);
-            targetStream.read(targetBuffer, 0, BLOCK_SIZE);
-            if (sourceByteCount < 0) {
-                return true;
-            }
-            if (!Arrays.equals(sourceBuffer, targetBuffer)) {
-                return false;
-            }
-        }
     }
 
     //Returns true if file acceptable
