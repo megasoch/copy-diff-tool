@@ -2,6 +2,7 @@ package tools;
 
 import exceptions.PathInitializationException;
 import filters.Filter;
+import org.apache.log4j.Logger;
 import utils.BinaryComparator;
 import utils.KMP;
 
@@ -13,6 +14,8 @@ import java.nio.file.attribute.FileTime;
 import java.util.*;
 
 public class CopyDiffImpl implements CopyDiff {
+    final static Logger log = Logger.getLogger(CopyDiffImpl.class);
+
     private Path source;
     private Path target;
     private Path diff;
@@ -38,25 +41,26 @@ public class CopyDiffImpl implements CopyDiff {
 
     @Override
     public void doCopyDiff() throws IOException {
+        log.info("Copy diff process started!");
         try {
-            if (incorrectInitialization()) {
-                throw new PathInitializationException("One or more folder paths(source, target, diff) not correctly initialized");
-            }
+            checkInitialization();
             fillPaths(source, source, sourceFilesPaths);
+            log.info("Source paths of files has been founded");
             for (Path path : sourceFilesPaths) {
                 Path sourcePath = Paths.get(source.toString(), path.toString());
                 Path targetPath = Paths.get(target.toString(), path.toString());
                 Path diffPath = Paths.get(diff.toString(), path.toString());
                 if (doFilter(sourcePath)) {
-                    if (Files.notExists(targetPath) || Files.isDirectory(targetPath)) {
+                    log.info("Filter passed: " + sourcePath.toString());
+                    if (Files.notExists(targetPath) || Files.isDirectory(targetPath) || !BinaryComparator.compareFiles(sourcePath, targetPath)) {
                         copyFile(sourcePath, diffPath);
-                    } else if (!BinaryComparator.compareFiles(sourcePath, targetPath)) {
-                        copyFile(sourcePath, diffPath);
+                    } else {
+                        log.info("File " + sourcePath.toString() + " NOT COPIED");
                     }
                 }
             }
         } catch (PathInitializationException e) {
-            e.printStackTrace();
+            log.error("Path initialization failed(source/target/diff == null or not folder)");
         }
     }
 
@@ -73,7 +77,7 @@ public class CopyDiffImpl implements CopyDiff {
     //Returns true if file acceptable
     private boolean doFilter(Path filteredPath) throws IOException {
         boolean verified = true;
-        for (Filter f: filters) {
+        for (Filter f : filters) {
             verified = f.doFilter(filteredPath) && verified;
         }
         return verified;
@@ -98,14 +102,17 @@ public class CopyDiffImpl implements CopyDiff {
             Files.createDirectories(diffParent);
         }
         Files.copy(sourcePath, diffPath, StandardCopyOption.REPLACE_EXISTING);
+        log.info("File: " + sourcePath.toString() + " COPIED IN " + diffParent.toString());
     }
 
-    private boolean incorrectInitialization() {
-        return source == null ||
-                target == null ||
-                diff == null ||
-                !Files.isDirectory(source) ||
-                !Files.isDirectory(target) ||
-                !Files.isDirectory(diff);
+    private void checkInitialization() throws PathInitializationException {
+        if (source == null ||
+            target == null ||
+            diff == null ||
+            !Files.isDirectory(source) ||
+            !Files.isDirectory(target) ||
+            !Files.isDirectory(diff)) {
+            throw new PathInitializationException();
+        }
     }
 }
