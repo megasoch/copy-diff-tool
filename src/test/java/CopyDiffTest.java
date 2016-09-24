@@ -23,6 +23,7 @@ public class CopyDiffTest extends Assert {
     private static Path diffVirus;
     private static Path diffClean;
     private static Path diffEqual;
+    private static Path diffBinaryEqual;
     private static Path diffAsFolderName;
 
     private static void createFileWithVirus() throws IOException {
@@ -77,6 +78,7 @@ public class CopyDiffTest extends Assert {
         diffVirus = Paths.get("src/main/resources/diff/fileWithVirus");
         diffClean = Paths.get("src/main/resources/diff/fileWithoutVirus");
         diffEqual = Paths.get("src/main/resources/diff/equalFile");
+        diffBinaryEqual = Paths.get("src/main/resources/diff/binaryEqualFile");
         diffAsFolderName = Paths.get("src/main/resources/diff/folder1/simpleFile");
     }
 
@@ -93,6 +95,11 @@ public class CopyDiffTest extends Assert {
     @Test
     public void equalNotCopied() {
         assertFalse(Files.exists(diffEqual));
+    }
+
+    @Test
+    public void binaryEqualNotCopied() {
+        assertFalse(Files.exists(diffBinaryEqual));
     }
 
     @Test

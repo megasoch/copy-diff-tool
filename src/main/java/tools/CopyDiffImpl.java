@@ -4,13 +4,9 @@ import exceptions.PathInitializationException;
 import filters.Filter;
 import org.apache.log4j.Logger;
 import utils.BinaryComparator;
-import utils.KMP;
 
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.*;
-import java.nio.file.attribute.FileTime;
 import java.util.*;
 
 public class CopyDiffImpl implements CopyDiff {
@@ -51,12 +47,14 @@ public class CopyDiffImpl implements CopyDiff {
                 Path targetPath = Paths.get(target.toString(), path.toString());
                 Path diffPath = Paths.get(diff.toString(), path.toString());
                 if (doFilter(sourcePath)) {
-                    log.info("Filter passed: " + sourcePath.toString());
+                    log.info("FILTER PASSED: " + sourcePath.toString());
                     if (Files.notExists(targetPath) || Files.isDirectory(targetPath) || !BinaryComparator.compareFiles(sourcePath, targetPath)) {
                         copyFile(sourcePath, diffPath);
                     } else {
                         log.info("File " + sourcePath.toString() + " NOT COPIED");
                     }
+                } else {
+                    log.info("FILTER NOT PASSED: " + sourcePath.toString());
                 }
             }
         } catch (PathInitializationException e) {

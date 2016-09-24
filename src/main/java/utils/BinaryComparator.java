@@ -1,5 +1,7 @@
 package utils;
 
+import org.apache.log4j.Logger;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,11 +15,14 @@ import java.util.Arrays;
  */
 public class BinaryComparator {
 
+    final static Logger log = Logger.getLogger(BinaryComparator.class);
+
     public static boolean compareFiles(Path sourcePath, Path targetPath) throws IOException {
         FileTime sourceTime = Files.getLastModifiedTime(sourcePath);
         FileTime targetTime = Files.getLastModifiedTime(targetPath);
         if (Files.size(sourcePath) == Files.size(targetPath)) {
             if (sourceTime.equals(targetTime)) {
+                log.info("SIZE and TIME of files equals: " + sourcePath + " == " + targetPath);
                 return true;
             }
             return binaryCompare(sourcePath, targetPath);
@@ -35,6 +40,7 @@ public class BinaryComparator {
             int sourceByteCount = sourceStream.read(sourceBuffer, 0, BLOCK_SIZE);
             targetStream.read(targetBuffer, 0, BLOCK_SIZE);
             if (sourceByteCount < 0) {
+                log.info("Files BINARY EQUALS " + sourcePath + " " + targetPath);
                 return true;
             }
             if (!Arrays.equals(sourceBuffer, targetBuffer)) {
